@@ -46,8 +46,8 @@ RSpec.describe Auction do
       auction.add_item(item4)
       auction.add_item(item5)
 
-      item1.add_bid(attendee2, 20)
       item1.add_bid(attendee1, 22)
+      item1.add_bid(attendee2, 20)
       item4.add_bid(attendee3, 50)
     end
     it 'can return items with no bids' do 
@@ -58,6 +58,69 @@ RSpec.describe Auction do
     it 'can return total potential revenue' do 
       item3.add_bid(attendee2, 15)
       expect(auction.potential_revenue).to eq(87)
+    end
+    it 'can return bidder names' do 
+      item3.add_bid(attendee2, 15)
+
+      expect(auction.bidders).to eq(["Megan", "Bob", "Mike"])
+    end
+    it 'can return bidder info' do
+      item3.add_bid(attendee2, 15) 
+      expected = {
+        attendee1 => {
+                        :budget => 50, 
+                        :items => [item1]
+                     },
+        attendee2 => {
+                       :budget => 75, 
+                       :items => [item1, item3]
+                     },
+        attendee3 => {
+                       :budget => 100, 
+                       :items => [item4] 
+                     }
+      }
+
+      expect(auction.bidder_info).to eq(expected)
+    end
+  end
+
+  describe '#date' do 
+    it 'returns the date of the auction' do 
+      allow(Date).to receive(:today).and_return(Date.new(1991,3,13))
+
+      expect(auction.date).to eq('13/03/1991')
+    end
+  end
+
+  describe '#close_auction' do 
+    before(:each) do 
+      auction.add_item(item1)
+      auction.add_item(item2)
+      auction.add_item(item3)
+      auction.add_item(item4)
+      auction.add_item(item5)
+
+      item1.add_bid(attendee1, 22)
+      item1.add_bid(attendee2, 20)
+      item4.add_bid(attendee2, 30)
+      item4.add_bid(attendee3, 50)
+      item3.add_bid(attendee2, 15)
+      item5.add_bid(attendee1, 35)
+    end
+    it 'closes the auction' do 
+      expected = {
+        item1 => attendee2,
+        item2 => 'Not Sold',
+        item3 => attendee2,
+        item4 => attendee3,
+        item5 => attendee1
+      }
+      expect(auction.close_auction).to eq(expected)
+    end
+
+    it 'sells items' do 
+      auction.item_seller(attendee1)
     end
   end
 end
